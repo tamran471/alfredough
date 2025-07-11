@@ -2,14 +2,15 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 import mysql.connector
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
-import os
 
 load_dotenv()
 
 
+from flask import Flask
+import os
+
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY')
-  # For flash messages
+app.secret_key = os.environ.get("SECRET_KEY", "mytemporarysecretkey")
 
 # Database connection functio
 
