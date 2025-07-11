@@ -1,18 +1,31 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import mysql.connector
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
+app.secret_key = os.getenv('SECRET_KEY')
+  # For flash messages
 
-# MySQL connection
+# Database connection functio
+
 def create_connection():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="Tamran@471",
-        database="alfredough_pos"
-    )
+    try:
+        connection = mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASS"),
+            database=os.getenv("DB_NAME")
+        )
+        return connection
+    except mysql.connector.Error as err:
+        print("Error:", err)
+        return None
+
 
 # Admin login
 @app.route('/admin/login', methods=['GET', 'POST'])
