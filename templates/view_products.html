@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View Products by Category</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            max-width: 800px;
+            margin: auto;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .category {
+            margin-bottom: 10px;
+        }
+
+        .category-button {
+            width: 100%;
+            background-color: #007bff;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .category-button:hover {
+            background-color: #0056b3;
+        }
+
+        .product-list {
+            display: none;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f5f5f5;
+        }
+
+        .btn-delete, .btn-edit {
+            padding: 6px 10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+        }
+
+    
+
+        .back-link {
+            margin-top: 30px;
+            text-align: center;
+        }
+    </style>
+
+    <script>
+        function toggleCategory(id) {
+            var panel = document.getElementById("cat-" + id);
+            panel.style.display = (panel.style.display === "block") ? "none" : "block";
+        }
+    </script>
+</head>
+<body>
+
+<h2>📦 Products by Category</h2>
+
+{% for category, products in category_products.items() %}
+<div class="category">
+    <button class="category-button" onclick="toggleCategory('{{ loop.index }}')">{{ category }}</button>
+    <div class="product-list" id="cat-{{ loop.index }}">
+        {% if products %}
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Price (Rs)</th>
+                <th>Actions</th>
+            </tr>
+            {% for product in products %}
+            <tr>
+                <td>{{ product[0] }}</td>
+                <td>{{ product[1] }}</td>
+                <td>{{ product[2] }}</td>
+                <td>
+                    <form action="{{ url_for('delete_product', product_id=product[0]) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this product?');">
+                        <button type="submit" class="btn-delete">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p>No products in this category.</p>
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
+
+<div class="back-link">
+    <a href="{{ url_for('dashboard') }}">⬅ Back to Dashboard</a>
+</div>
+
+</body>
+</html>

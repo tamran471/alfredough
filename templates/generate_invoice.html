@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Invoice</title>
+</head>
+<body>
+    <h1>Generate Invoice Options</h1>
+    <ul>
+        <li><a href="{{ url_for('create_order') }}">Create New Order</a></li>
+        <li><a href="{{ url_for('view_invoices', range_type='today') }}">View Today's Invoices</a></li>
+        <li><a href="{{ url_for('view_invoices', range_type='week') }}">View This Week's Invoices</a></li>
+        <li><a href="{{ url_for('view_invoices', range_type='month') }}">View This Month's Invoices</a></li>
+    </ul>
+    <a href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+</body>
+</html>

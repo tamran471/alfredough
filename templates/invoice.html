@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invoice #{{ order[0] }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            max-width: 800px;
+            margin: auto;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f5f5f5;
+        }
+
+        .total {
+            text-align: right;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .back-link {
+            margin-top: 30px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<h2>🧾 Invoice #{{ order[0] }}</h2>
+<p><strong>Date:</strong> {{ order[2] }}</p>
+<p><strong>Order Type:</strong> {{ order[3]|capitalize }}</p>
+
+
+<table>
+    <tr>
+        <th>Item</th>
+        <th>Price</th>
+        <th>Quantity</th>
+        <th>Subtotal</th>
+    </tr>
+    {% for item in items %}
+    <tr>
+        <td>{{ item[0] }}</td>
+        <td>Rs {{ item[1] }}</td>
+        <td>{{ item[2] }}</td>
+        <td>Rs {{ item[1] * item[2] }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+
+<p class="total">Grand Total: Rs. {{ order[1] }}</p>
+
+    <button class="print-btn" onclick="window.print()">🖨️ Print Invoice</button>
+
+<div class="back-link">
+    <a href="{{ url_for('dashboard') }}">⬅ Back to Dashboard</a>
+</div>
+
+</body>
+</html>

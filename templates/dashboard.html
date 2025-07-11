@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f9f9f9;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        .overview {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 250px;
+        }
+
+        .card h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+
+        .nav-links a {
+            display: block;
+            margin: 10px 0;
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h2>Welcome, Admin!</h2>
+
+    <h3>📊 Sales Overview</h3>
+    <div class="overview">
+        <div class="card">
+            <h3>Today</h3>
+            <p><strong>Orders:</strong> {{ stats.today.orders }}</p>
+            <p><strong>Total:</strong> Rs. {{ stats.today.total }}</p>
+        </div>
+        <div class="card">
+            <h3>This Week</h3>
+            <p><strong>Orders:</strong> {{ stats.week.orders }}</p>
+            <p><strong>Total:</strong> Rs. {{ stats.week.total }}</p>
+        </div>
+        <div class="card">
+            <h3>This Month</h3>
+            <p><strong>Orders:</strong> {{ stats.month.orders }}</p>
+            <p><strong>Total:</strong> Rs. {{ stats.month.total }}</p>
+        </div>
+    </div>
+
+    <div class="nav-links">
+        <a href="{{ url_for('add_product') }}">➕ Add Product</a>
+        <a href="{{ url_for('view_products') }}">📦 View Products</a>
+        <a href="{{ url_for('create_order') }}">🧾 Create Order</a>
+        <a href="{{ url_for('generate_invoice') }}">📑 Generate Invoice</a>
+        <a href="{{ url_for('kitchen_stock') }}">📦 Kitchen Stock</a>
+
+        <a href="{{ url_for('admin_login') }}">🚪 Logout</a>
+    </div>
+</body>
+</html>

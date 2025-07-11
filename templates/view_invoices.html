@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ range_type.capitalize() }} Invoices</title>
+</head>
+<body>
+    <h1>{{ range_type.capitalize() }} Invoices</h1>
+
+    {% if invoices %}
+        <table border="1">
+            <tr>
+                <th>Invoice ID</th>
+                <th>Total Amount</th>
+                <th>Date</th>
+                <th>View</th>
+            </tr>
+            {% for invoice in invoices %}
+            <tr>
+                <td>{{ invoice[0] }}</td>
+                <td>Rs. {{ invoice[1] }}</td>
+                <td>{{ invoice[2] }}</td>
+                <td><a href="{{ url_for('view_invoice', order_id=invoice[0]) }}">View Invoice</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No invoices found for this period.</p>
+    {% endif %}
+
+    <br>
+    <a href="{{ url_for('generate_invoice') }}">Back</a>
+</body>
+</html>

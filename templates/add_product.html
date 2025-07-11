@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Product</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            max-width: 500px;
+            margin: auto;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin: 10px 0 5px;
+        }
+
+        input[type="text"], input[type="number"], select {
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .note {
+            font-size: 0.9em;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Add New Product</h2>
+
+<form method="POST">
+    <label>Product Name:</label>
+    <input type="text" name="name" required>
+
+    <label>Price (Rs):</label>
+    <input type="number" step="0.01" name="price" required>
+
+    <label>Select Category:</label>
+    <select name="category_id">
+        {% for cat in categories %}
+            <option value="{{ cat[0] }}">{{ cat[1] }}</option>
+        {% endfor %}
+    </select>
+
+    <label>Or Create New Category:</label>
+    <input type="text" name="new_category" placeholder="e.g., Pasta">
+    <div class="note">If filled, it will create and use this new category instead of the selected one.</div>
+
+    <button type="submit">Add Product</button>
+</form>
+
+
+</body>
+</html>
