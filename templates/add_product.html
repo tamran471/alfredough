@@ -2,75 +2,47 @@
 <html>
 <head>
     <title>Add Product</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 40px;
-            max-width: 500px;
-            margin: auto;
-        }
+    <script>
+        function addVariantRow() {
+            const container = document.getElementById('variants-container');
+            const row = document.createElement('div');
+            row.classList.add('variant-row');
 
-        h2 {
-            text-align: center;
+            row.innerHTML = `
+                <input type="text" name="variant_name[]" placeholder="Variant Name" required>
+                <input type="number" step="0.01" name="price[]" placeholder="Variant Price" required>
+                <button type="button" onclick="this.parentElement.remove()">Remove</button>
+            `;
+            container.appendChild(row);
         }
-
-        form {
-            display: flex;
-            flex-direction: column;
-        }
-
-        label {
-            margin: 10px 0 5px;
-        }
-
-        input[type="text"], input[type="number"], select {
-            padding: 10px;
-            margin-bottom: 15px;
-        }
-
-        button {
-            padding: 10px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #218838;
-        }
-
-        .note {
-            font-size: 0.9em;
-            color: #777;
-        }
-    </style>
+    </script>
 </head>
 <body>
+    <h2>Add Product with Variants</h2>
+    <form method="POST" action="/add_product">
+        <label>Product Name:</label>
+        <input type="text" name="name" required><br><br>
 
-<h2>Add New Product</h2>
+        <label>Select Existing Category:</label>
+        <select name="category_id">
+            {% for category in categories %}
+                <option value="{{ category[0] }}">{{ category[1] }}</option>
+            {% endfor %}
+        </select><br><br>
 
-<form method="POST">
-    <label>Product Name:</label>
-    <input type="text" name="name" required>
+        <label>Or Create New Category:</label>
+        <input type="text" name="new_category" placeholder="Leave blank if not adding new"><br><br>
 
-    <label>Price (Rs):</label>
-    <input type="number" step="0.01" name="price" required>
+        <h3>Variants:</h3>
+        <div id="variants-container">
+            <div class="variant-row">
+                <input type="text" name="variant_name[]" placeholder="Variant Name" required>
+                <input type="number" step="0.01" name="price[]" placeholder="Variant Price" required>
+            </div>
+        </div>
+        <button type="button" onclick="addVariantRow()">+ Add Variant</button><br><br>
 
-    <label>Select Category:</label>
-    <select name="category_id">
-        {% for cat in categories %}
-            <option value="{{ cat[0] }}">{{ cat[1] }}</option>
-        {% endfor %}
-    </select>
-
-    <label>Or Create New Category:</label>
-    <input type="text" name="new_category" placeholder="e.g., Pasta">
-    <div class="note">If filled, it will create and use this new category instead of the selected one.</div>
-
-    <button type="submit">Add Product</button>
-</form>
-
-
+        <input type="submit" value="Add Product">
+    </form>
 </body>
 </html>
