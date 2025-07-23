@@ -3,182 +3,105 @@
 <head>
     <title>Create Order</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 40px;
-            max-width: 900px;
-            margin: auto;
-            background-color: #f9f9f9;
-        }
-
-        h2 {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        label {
-            font-weight: bold;
-        }
-
-        select, input[type=text], input[type=number] {
+        .accordion {
+            background-color: #f2f2f2;
+            color: #000;
+            cursor: pointer;
             padding: 10px;
-            margin: 8px 0;
             width: 100%;
-            box-sizing: border-box;
+            border: none;
+            text-align: left;
+            outline: none;
+            transition: 0.3s;
+            margin-bottom: 5px;
+            font-size: 18px;
         }
 
-        .order-info {
-            margin-bottom: 30px;
+        .active, .accordion:hover {
+            background-color: #ccc;
         }
 
-        .category {
+        .panel {
+            padding: 10px;
+            display: none;
+            background-color: white;
+            border: 1px solid #ddd;
+        }
+
+        .variant {
             margin-bottom: 10px;
         }
 
-        .category-button {
-            width: 100%;
-            background-color: #007bff;
+        .btn {
+            padding: 8px 16px;
+            background-color: #4CAF50;
             color: white;
-            padding: 12px;
-            text-align: left;
             border: none;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 5px;
-        }
-
-        .category-button:hover {
-            background-color: #0056b3;
-        }
-
-        .product-list {
-            display: none;
-            border: 1px solid #ccc;
-            padding: 10px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
             margin-top: 10px;
-        }
-
-        th, td {
-            border: 1px solid #ccc;
-            padding: 10px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #f5f5f5;
-        }
-
-        input[type="number"] {
-            width: 60px;
-            padding: 6px;
-        }
-
-        button[type="submit"] {
-            margin-top: 20px;
-            padding: 12px 20px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            font-size: 16px;
             cursor: pointer;
         }
 
-        button[type="submit"]:hover {
-            background-color: #218838;
+        .btn:hover {
+            background-color: #45a049;
+        }
+
+        .back-btn {
+            background-color: #888;
+            text-decoration: none;
+            padding: 6px 12px;
+            color: white;
+            margin-top: 10px;
+            display: inline-block;
         }
     </style>
-
-    <script>
-        function toggleCategory(id) {
-            var panel = document.getElementById("cat-" + id);
-            panel.style.display = (panel.style.display === "block") ? "none" : "block";
-        }
-
-        function showOrderFields() {
-            const type = document.getElementById('order_type').value;
-            document.getElementById('quick_serve_fields').style.display = (type === 'quick_serve') ? 'block' : 'none';
-            document.getElementById('takeaway_fields').style.display = (type === 'takeaway') ? 'block' : 'none';
-            document.getElementById('delivery_fields').style.display = (type === 'delivery') ? 'block' : 'none';
-        }
-
-        window.onload = showOrderFields;
-    </script>
 </head>
 <body>
+    <h2>Create New Order</h2>
 
-<h2>🧾 Create New Order</h2>
+    <form method="post">
+        <label>Order Type:</label>
+        <select name="order_type" required>
+            <option value="Quick Serve">Quick Serve</option>
+            <option value="Takeaway">Takeaway</option>
+            <option value="Delivery">Delivery</option>
+        </select><br><br>
 
-<form method="POST">
-    <div class="order-info">
-        <label for="order_type">Order Type:</label>
-        <select name="order_type" id="order_type" onchange="showOrderFields()" required>
-            <option value="">-- Select Order Type --</option>
-            <option value="quick_serve">Quick Serve</option>
-            <option value="takeaway">Takeaway</option>
-            <option value="delivery">Delivery</option>
-        </select>
+        <label>Extra Info:</label><br>
+        <textarea name="extra_info" rows="3" cols="40" placeholder="Table #, Customer name, etc."></textarea><br><br>
 
-        <div id="quick_serve_fields" style="display:none;">
-            <label>Table Number:</label>
-            <input type="text" name="table_number" placeholder="e.g. T1">
-            <label>Waiter Name:</label>
-            <input type="text" name="waiter_name" placeholder="e.g. tamran">
-        </div>
-
-        <div id="takeaway_fields" style="display:none;">
-            <label>Customer Name:</label>
-            <input type="text" name="customer_name" placeholder="e.g. tamran">
-            <label>Customer Contact:</label>
-            <input type="text" name="customer_contact" placeholder="e.g. 03123456789">
-        </div>
-
-        <div id="delivery_fields" style="display:none;">
-            <label>Rider Name:</label>
-            <input type="text" name="rider_name" placeholder="e.g. tamran">
-            <label>Customer Name:</label>
-            <input type="text" name="customer_name" placeholder="e.g. tamran">
-            <label>Customer Contact:</label>
-            <input type="text" name="customer_contact" placeholder="e.g. 03001234567">
-        </div>
-    </div>
-
-    {% for category, products in category_products.items() %}
-    <div class="category">
-        <button type="button" class="category-button" onclick="toggleCategory('{{ loop.index }}')">
-            {{ category }}
-        </button>
-        <div class="product-list" id="cat-{{ loop.index }}">
-            {% if products %}
-            <table>
-                <tr>
-                    <th>Product</th>
-                    <th>Price (Rs)</th>
-                    <th>Quantity</th>
-                </tr>
-                {% for product in products %}
-                <tr>
-                    <td>{{ product[1] }}</td>
-                    <td>{{ product[2] }}</td>
-                    <td>
-                        <input type="number" name="qty_{{ product[0] }}" value="0" min="0">
-                    </td>
-                </tr>
+        {% for category, items in grouped.items() %}
+            <button type="button" class="accordion">{{ category }}</button>
+            <div class="panel">
+                {% for variant in items %}
+                    <div class="variant">
+                        <input type="checkbox" name="variant" value="{{ variant.variant_id }}">
+                        {{ variant.label }} - Rs. {{ variant.price }}
+                        Quantity: <input type="number" name="quantity" min="1" value="1" style="width: 60px;">
+                    </div>
                 {% endfor %}
-            </table>
-            {% else %}
-            <p>No products in this category.</p>
-            {% endif %}
-        </div>
-    </div>
-    {% endfor %}
+            </div>
+        {% endfor %}
 
-    <button type="submit">Place Order</button>
-</form>
+        <br>
+        <button type="submit" class="btn">Create Order</button>
+    </form>
 
+    <br>
+    <a href="/dashboard" class="back-btn">← Back to Dashboard</a>
+
+    <script>
+        var acc = document.getElementsByClassName("accordion");
+        for (var i = 0; i < acc.length; i++) {
+            acc[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                var panel = this.nextElementSibling;
+                if (panel.style.display === "block") {
+                    panel.style.display = "none";
+                } else {
+                    panel.style.display = "block";
+                }
+            });
+        }
+    </script>
 </body>
 </html>
