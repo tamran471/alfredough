@@ -92,42 +92,53 @@ def dashboard():
 # Add product
 @app.route('/add_product', methods=['GET', 'POST'])
 def add_product():
-    if 'admin' not in session:
-        return redirect(url_for('admin_login'))
-
-    conn = create_connection()
+    conn = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="Tamran@471",
+        database="alfredough_pos"
+    )
     cursor = conn.cursor()
-
-    # Fetch all categories
-    cursor.execute("SELECT * FROM categories")
-    categories = cursor.fetchall()
 
     if request.method == 'POST':
         name = request.form['name']
-        price = request.form['price']
-        new_category = request.form.get('new_category').strip()
+        new_category = request.form.get('new_category', '').strip()
         category_id = request.form.get('category_id')
 
-        # If a new category is provided
         if new_category:
             cursor.execute("INSERT INTO categories (name) VALUES (%s)", (new_category,))
             conn.commit()
-            category_id = cursor.lastrowid  # use new category id
+            category_id = cursor.lastrowid
         else:
             category_id = int(category_id)
 
-        # Insert product with selected or new category
-        cursor.execute(
-            "INSERT INTO products (name, price, category_id) VALUES (%s, %s, %s)",
-            (name, price, category_id)
-        )
+        # Insert main product
+        cursor.execute("INSERT INTO products (name, price, category_id) VALUES (%s, %s, %s)", (name, 0, category_id))
+        product_id = cursor.lastrowid
+
+        # Insert variants
+        variant_names = request.form.getlist('variant_name[]')
+        variant_prices = request.form.getlist('price[]')  # match field name from template
+
+        for vname, vprice in zip(variant_names, variant_prices):
+            cursor.execute(
+                "INSERT INTO product_variants (product_id, variant_name, price) VALUES (%s, %s, %s)",
+                (product_id, vname, vprice)
+            )
+
         conn.commit()
-        flash('Product added successfully.')
+        cursor.close()
+        conn.close()
+        flash('Product with variants added successfully.')
         return redirect(url_for('view_products'))
 
+    # GET: show form
+    cursor.execute("SELECT id, name FROM categories")
+    categories = cursor.fetchall()
     cursor.close()
     conn.close()
     return render_template('add_product.html', categories=categories)
+
 
 
 # View products
@@ -139,105 +150,103 @@ def view_products():
     conn = create_connection()
     cursor = conn.cursor()
 
-    # Fetch categories and products
+    # Step 1: Fetch categories, products, and their variants
     cursor.execute("""
-        SELECT c.id, c.name, p.id, p.name, p.price
+        SELECT c.name AS category_name, p.id AS product_id, p.name AS product_name,
+               v.id AS variant_id, v.variant_name, v.price
         FROM categories c
-        LEFT JOIN products p ON c.id = p.category_id
-        ORDER BY c.name, p.name
+        JOIN products p ON c.id = p.category_id
+        LEFT JOIN product_variants v ON p.id = v.product_id
+        WHERE p.status = 'active'
+        ORDER BY c.name, p.name, v.variant_name
     """)
     rows = cursor.fetchall()
 
-    # Organize data into a dict: {category: [products]}
+    # Step 2: Organize data into nested dictionary
     category_products = {}
-    for cat_id, cat_name, prod_id, prod_name, prod_price in rows:
+    for cat_name, pid, pname, vid, vname, price in rows:
         if cat_name not in category_products:
-            category_products[cat_name] = []
-        if prod_id:  # Only add if product exists
-            category_products[cat_name].append((prod_id, prod_name, prod_price))
+            category_products[cat_name] = {}
+
+        if pid not in category_products[cat_name]:
+            category_products[cat_name][pid] = {
+                'name': pname,
+                'variants': []
+            }
+
+        if vid:
+            category_products[cat_name][pid]['variants'].append({
+                'id': vid,
+                'variant_name': vname,
+                'price': price
+            })
 
     cursor.close()
     conn.close()
+
     return render_template('view_products.html', category_products=category_products)
 
 
 # Create order
 @app.route('/create_order', methods=['GET', 'POST'])
 def create_order():
-    if 'admin' not in session:
-        return redirect(url_for('admin_login'))
-
     conn = create_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT c.name, p.id, p.name, p.price
-        FROM categories c
-        JOIN products p ON c.id = p.category_id
-        WHERE p.status = 'active'
-        ORDER BY c.name, p.name
-    """)
-    rows = cursor.fetchall()
-
-    category_products = {}
-    for cat_name, pid, pname, price in rows:
-        if cat_name not in category_products:
-            category_products[cat_name] = []
-        category_products[cat_name].append((pid, pname, price))
+    cursor = conn.cursor(dictionary=True)
 
     if request.method == 'POST':
+        variant_ids = request.form.getlist('variant')
+        quantities = request.form.getlist('quantity')
         order_type = request.form['order_type']
-        extra_info = {}
+        extra_info = request.form.get('extra_info', '')
 
-        if order_type == 'quick_serve':
-            extra_info['table_number'] = request.form['table_number']
-            extra_info['waiter_name'] = request.form['waiter_name']
-        elif order_type == 'takeaway':
-            extra_info['customer_name'] = request.form['customer_name']
-            extra_info['customer_contact'] = request.form['customer_contact']
-        elif order_type == 'delivery':
-            extra_info['rider_name'] = request.form['rider_name']
-            extra_info['customer_name'] = request.form['customer_name']
-            extra_info['customer_contact'] = request.form['customer_contact']
+        total_amount = 0
 
-        order_total = 0
-        items = []
+        for i, variant_id in enumerate(variant_ids):
+            cursor.execute("SELECT price FROM product_variants WHERE id = %s", (variant_id,))
+            variant = cursor.fetchone()
+            if variant:
+                total_amount += variant['price'] * int(quantities[i])
 
-        for key in request.form:
-            if key.startswith('qty_'):
-               pid = key.split('_')[1]
-               try:
-                   qty = int(request.form[key])
-               except ValueError: 
-                      qty = 0
-               if qty > 0:
-                 cursor.execute("SELECT price FROM products WHERE id = %s", (pid,))
-                 result = cursor.fetchone()
-                 if result:
-                     price = result[0]
-                     order_total += price * qty
-                     items.append((pid, qty))
-
-
-        cursor.execute("""
-            INSERT INTO orders (total_amount, order_type, extra_info)
-            VALUES (%s, %s, %s)
-        """, (order_total, order_type, str(extra_info)))
-
+        cursor.execute("INSERT INTO orders (total_amount, order_type, extra_info) VALUES (%s, %s, %s)",
+                       (total_amount, order_type, extra_info))
         order_id = cursor.lastrowid
 
-        for pid, qty in items:
-            for _ in range(qty):
-                cursor.execute("INSERT INTO order_items (order_id, product_id) VALUES (%s, %s)", (order_id, pid))
+        for i, variant_id in enumerate(variant_ids):
+            quantity = int(quantities[i])
+            cursor.execute("SELECT product_id FROM product_variants WHERE id = %s", (variant_id,))
+            variant = cursor.fetchone()
+            if variant:
+               cursor.execute(
+                 "INSERT INTO order_items (order_id, product_id, variant_id, quantity) VALUES (%s, %s, %s, %s)",
+                 (order_id, variant['product_id'], variant_id, quantity)
+        )
+
 
         conn.commit()
-        cursor.close()
-        conn.close()
         return redirect(url_for('view_invoice', order_id=order_id))
 
-    cursor.close()
-    conn.close()
-    return render_template('create_order.html', category_products=category_products)
+
+    # Grouped variants under categories
+    cursor.execute("""
+        SELECT c.name AS category, v.id AS variant_id, 
+               CONCAT(p.name, ' - ', v.variant_name) AS label, v.price 
+        FROM product_variants v
+        JOIN products p ON v.product_id = p.id
+        JOIN categories c ON p.category_id = c.id
+        ORDER BY c.name
+    """)
+    variants = cursor.fetchall()
+
+    # Group variants by category
+    grouped = {}
+    for item in variants:
+        category = item['category']
+        if category not in grouped:
+            grouped[category] = []
+        grouped[category].append(item)
+
+    return render_template('create_order.html', grouped=grouped)
+
 
 
 # View invoice
@@ -248,16 +257,17 @@ def view_invoice(order_id):
 
     conn = create_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, total_amount, created_at, order_type FROM orders WHERE id = %s", (order_id,))
+    cursor.execute("SELECT id, total_amount, created_at, order_type FROM orders WHERE id = %s", (order_id,))    
     order = cursor.fetchone()
 
     cursor.execute("""
-        SELECT p.name, p.price, COUNT(*) as quantity
-        FROM order_items oi
-        JOIN products p ON oi.product_id = p.id
-        WHERE oi.order_id = %s
-        GROUP BY p.id
-    """, (order_id,))
+    SELECT p.name, v.variant_name, v.price, oi.quantity
+    FROM order_items oi
+    JOIN product_variants v ON oi.variant_id = v.id
+    JOIN products p ON v.product_id = p.id
+    WHERE oi.order_id = %s
+""", (order_id,))
+
     items = cursor.fetchall()
 
     cursor.close()
