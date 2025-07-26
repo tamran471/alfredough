@@ -92,12 +92,7 @@ def dashboard():
 # Add product
 @app.route('/add_product', methods=['GET', 'POST'])
 def add_product():
-    conn = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="Tamran@471",
-        database="alfredough_pos"
-    )
+    conn = create_connection()
     cursor = conn.cursor()
 
     if request.method == 'POST':
